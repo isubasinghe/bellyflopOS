@@ -1,0 +1,43 @@
+{
+    "title" : "Memory Management",
+    "tests" : {
+        "Malloc-Small" : {
+            "title" :  "Malloc() - Small Memory Region",
+            "modules" : [
+                ["armv8/sbin/hello"]
+            ],
+            "teststeps" : [
+                {
+                    "action" : "input",
+                    "value"  : "mmtest malloc-small"
+                },
+                {
+                    "action" : "expect",
+                    "pass" : ["Completed test 'mmtest malloc-small' - SUCCESS"],
+                    "fail" : [],
+                    "points" : 2
+                }
+            ],
+            "timeout" : 20
+        },
+        "Malloc-Medium" : {
+            "title" :  "Malloc() - Medium Memory Region",
+            "modules" : [
+                ["armv8/sbin/hello"]
+            ],
+            "teststeps" : [
+                {
+                    "action" : "input",
+                    "value"  : "mmtest malloc-medium"
+                },
+                {
+                    "action" : "expect",
+                    "pass" : ["Completed test 'mmtest malloc-medium' - SUCCESS"],
+                    "fail" : [],
+                    "points" : 2
+                }
+            ],
+            "timeout" : 20
+        }
+    }
+}

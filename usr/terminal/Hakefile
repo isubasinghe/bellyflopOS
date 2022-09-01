@@ -1,0 +1,7 @@
+[ build application { target = "terminal",
+                      cFiles = ["main.c"],
+                      addLibraries = [ "mm", "getopt", "elf", "spawn", "lpuart", "driverkit", "gic_dist", "aos", "collections",
+                        "grading"],
+                      architectures = allArchitectures
+                    }
+]

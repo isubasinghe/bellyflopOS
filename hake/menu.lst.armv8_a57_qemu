@@ -1,0 +1,24 @@
+#
+# This script is used to describe the commands to start at
+# boot-time and the arguments they should receive.
+#
+bootdriver  /armv8/sbin/boot_armv8_generic
+cpudriver /armv8/sbin/cpu_a57_qemu loglevel=3 serial=0x9000000 logmask=128
+module  /armv8/sbin/init
+module /armv8/sbin/hello this is a argument test
+module /armv8/sbin/loophello DefaultName
+module /armv8/sbin/memeater
+module /armv8/sbin/rpc_test
+module /armv8/sbin/remote_test
+module /armv8/sbin/nameservicetest
+module /armv8/sbin/nameserver
+module /armv8/sbin/clientserver
+module /armv8/sbin/remote_bench
+module /armv8/sbin/fsfat32
+module /armv8/sbin/terminal
+module /armv8/sbin/shell
+module /armv8/sbin/echoserver
+module /armv8/sbin/remoteterminal
+module /armv8/sbin/nc
+module /armv8/sbin/longrunning
+# End of file, this needs to have a certain length...

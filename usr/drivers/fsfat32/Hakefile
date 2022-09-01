@@ -1,0 +1,29 @@
+--------------------------------------------------------------------------
+-- Copyright (c) 2020, ETH Zurich.
+-- All rights reserved.
+--
+-- This file is distributed under the terms in the attached LICENSE file.
+-- If you do not find this file, copies can be found by writing to:
+-- ETH Zurich D-INFK, CAB F.78, Universitaetstr 6, CH-8092 Zurich.
+--
+-- Hakefile for fsfat32 
+--
+--------------------------------------------------------------------------
+
+[
+    build library {
+        target = "fsfat32_lib",
+        cFiles = ["fat32_file_system.c", "sd_wrapper.c"],
+        mackerelDevices = [ "fat32_ebpb", "fat_bpb" ],
+        addLibraries = libDeps ["sdhc"],
+        architectures = ["armv8"]
+    },
+
+
+    build application {
+        target = "fsfat32",
+        cFiles = ["main.c"],
+        addLibraries = libDeps ["driverkit", "fsfat32_lib"],
+        architectures = ["armv8"]
+    }    
+]

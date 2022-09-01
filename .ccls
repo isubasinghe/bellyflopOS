@@ -1,0 +1,11 @@
+clang 
+%c -std=c11
+%c -D__aarch64__
+-Iinclude
+-Ibuild/armv8/include
+-Ibuild/armv8/include/errors
+-Ikernel/include
+-Iinclude/target/aarch64
+-Iinclude/arch/aarch64
+-Ikernel/include/arch/armv8
+-Ilib/aos/include

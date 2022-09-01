@@ -1,0 +1,8 @@
+[ build application { target = "shell",
+                      cFiles = [
+                        "main.c"],
+                      addLibraries = [ "mm", "getopt", "elf", "spawn", "aos",
+                        "grading", "fs", "netutil"],
+                      architectures = allArchitectures
+                    }
+]

@@ -1,0 +1,524 @@
+syntax = "proto3";
+
+// Run this from the rpc folder
+// protoc-c rpcs.proto --c_out .  && sed -i 's/<protobuf-c\/protobuf-c.h>/"aos\/rpc\/protobuf-c.h"/g' rpcs.pb-c.h && sed -i 's/rpcs.pb-c.h/aos\/rpc\/rpcs.pb-c.h/g' rpcs.pb-c.c && mv ./rpcs.pb-c.c ../../../lib/aos/rpc/rpcs.pb-c.c
+
+// To add a new method:
+//    1) Add it to the RpcMethod enum below
+//    2) Create a corresponding Request/Response (both are optional)
+//    3) Add the Request/Response protos to RpcRequestWrap/RpcResponseWrap.
+//    4) Run the proto-c generator with the command above.
+// 
+// Writing hooks:
+//    1) Client hook examples can be found in aos_rpc.c, e.g., aos_rpc_process_spawn()
+//    2) Server hooks are in aos_rpc_servers.c
+
+enum RpcMethod {
+  INIT_SEND_NUMBER = 0;
+  INIT_SEND_STRING = 1;
+  INIT_ESTABLISH_DOMAIN_SERVER = 10;
+  INIT_NAMESERVER_STARTED = 17;
+
+  INIT_SERIAL_PUT_STRING = 3;
+  INIT_SERIAL_GETCHAR = 2;
+  INIT_SERIAL_PUTCHAR = 4;
+  INIT_PROCESS_GET_ALL_PIDS = 5;
+  INIT_PROCESS_GET_NAME = 6;
+  INIT_PROCESS_SPAWN = 7;
+  INIT_PROCESS_INFORM_DEATH = 44;
+  
+  MEM_GET_RAM_CAP = 8;
+  
+  SERVICE_CONNECT = 11;
+  SERVICE_BYTES = 18;
+
+  ROUTE = 12;
+
+  // SERVICES
+  TEST_INCREMENT = 13;
+  TEST_CAP_INCREMENT = 14;
+
+  NS_LOOKUP = 15;
+  NS_REGISTER = 16;
+  NS_ENUMERATE = 24;
+  NS_DEREGISTER = 25;
+
+  // Networking
+
+  CREATE_UDP_ENDPOINT = 19;
+  CREATE_TCP_CONNECTION = 20;
+  ARP_REQUEST = 21;
+  GET_ARP_TABLE_REQUEST = 49;
+
+  CREATE_TCP_SERVER = 22;
+  CONNECT_TCP_CLIENT = 23;
+
+  // Filesystem
+  FS_OPEN = 26;
+  FS_CREATE = 27;
+  FS_CLOSE = 28;
+  FS_READ = 29;
+  FS_WRITE = 30;
+  FS_TRUNC = 38;
+  FS_OPENDIR = 39;
+  FS_READNEXTDIR = 40;
+  FS_DELETE = 41;
+  FS_READFILE_TO_FRAME = 47;
+
+  // DO NOT CHANGE: Setting up LMP channels depends on this value being 9.
+  SEND_LOCAL_LMP_EP = 9;
+
+  TERM_ACQUIRE_LOCK=31;
+  TERM_RELEASE_LOCK=32;
+  TERM_REGISTER_CLIENT=33;
+  TERM_WRITE_STRING=34;
+  TERM_READ_STRING=35;
+  TERM_WRITE_CHAR=36;
+  TERM_READ_CHAR=37;
+  TERM_SWITCH_TO_UMP = 42;
+  TERM_DEBUG = 43;
+
+
+  // next id: 49
+}
+
+// INIT
+message InitSendNumberRequest {
+  uint64 number = 1;
+}
+
+message InitSendStringRequest {
+  string str = 1;
+}
+
+// SERIAL
+message InitSerialPutStringRequest {
+  string str = 1;
+}
+
+message InitSerialPutcharRequest {
+  uint32 value = 1;
+}
+
+message InitSerialGetcharResponse {
+  uint32 value = 1;
+}
+
+// PROCESS
+message InitProcessSpawnRequest {
+  uint32 core = 1;
+  string cmdline = 2;
+}
+
+message InitProcessSpawnResponse {
+  uint32 pid = 1;
+}
+
+message InitProcessGetNameRequest {
+  uint32 pid = 1;
+}
+
+message InitProcessGetNameResponse {
+  string name = 1;
+}
+
+message InitProcessGetAllPidsRequest {
+  bool should_query = 1;
+}
+
+message InitProcessGetAllPidsResponse {
+  repeated uint32 pids = 1;
+}
+
+message InitProcessInformDeathRequest {
+    uint32 pid = 1;
+}
+
+message RouteRequest {
+  uint64 destination_sid = 1;
+
+  RpcMethod method = 2;
+  RpcRequestWrap inner_request = 3;
+}
+
+message RouteResponse {
+  RpcMethod method = 2;
+  RpcResponseWrap inner_response = 3;
+}
+
+// MEMORY
+message MemGetRamCapRequest {
+  uint64 bytes = 1;
+  uint64 alignment = 2;
+}
+
+message MemGetRamCapResponse {
+  uint64 allocated_bytes = 1;
+}
+
+// SERVICE handling
+message ServiceConnectRequest {
+  enum Type {
+    UMP = 0;
+    LMP = 1;
+  }
+
+  Type type = 1;
+}
+
+message ServiceBytesRequest {
+  bytes raw_bytes = 1;
+}
+
+message ServiceBytesResponse {
+  bytes raw_bytes = 1;
+}
+
+// ---------- SERVICES ----------
+// Test
+message TestIncrementRequest {
+  uint64 number = 1;
+}
+
+message TestIncrementResponse {
+  uint64 number = 1;
+}
+
+message TestCapIncrementRequest {
+  uint64 number = 1;
+}
+
+message TestCapIncrementResponse {
+  uint64 number = 1;
+}
+
+// Nameserver
+message ServiceInfo {
+  string name = 1;
+  uint64 sid = 2;
+}
+
+message NsLookupRequest {
+  string name = 1;
+}
+
+message NsLookupResponse {
+  uint64 sid = 1;
+}
+
+message NsRegisterRequest {
+  ServiceInfo service = 1;
+}
+
+message NsEnumerateRequest {
+  string prefix = 1;
+}
+
+message NsDeregisterRequest {
+  string name = 1;
+}
+
+message NsEnumerateResponse {
+  repeated ServiceInfo services = 1;
+}
+
+// Networking 
+
+message CreateUdpEndpointRequest {
+  uint32 port = 1;
+  uint32 is_high_speed_connection = 2;
+}
+
+message CreateTcpConnectionRequest {
+  uint32 src_port = 1;
+  uint32 dst_port = 2;
+  uint32 dst_ip = 3;
+  uint64 timeout = 4;
+  uint32 is_high_speed_connection = 5;
+}
+
+message ArpRequest {
+  uint32 ip_addr = 1;
+  uint64 timeout = 2;
+}
+
+message ArpTableResponse {
+  repeated uint32 ip_addr = 1;
+  repeated uint64 mac_addr = 2;
+}
+
+message CreateTcpServerRequest {
+  uint32 port = 1;
+  string service_name = 2;
+  uint32 is_high_speed_connection = 3;
+}
+
+message ConnectTcpClientRequest {
+  uint32 port = 1;
+  uint32 ip_addr = 2;
+}
+
+// Filesystem
+
+// Open
+message FSOpenRequest {
+  string path = 1;
+  int32 flags = 2;
+}
+
+message FSOpenResponse {
+  uint64 fd = 1;
+  uint32 size = 2;
+}
+
+// Create
+message FSCreateRequest {
+  string path = 1;
+  int32 flags = 2;
+  bool dir = 3;
+}
+
+message FSCreateResponse {
+  uint64 fd = 1;
+}
+
+// Delete
+message FSDeleteRequest {
+  string path = 1;
+}
+
+// Close
+message FSCloseRequest {
+  uint64 fd = 1;
+}
+
+// Read
+message FSReadRequest {
+  uint64 fd = 1;
+  uint64 offset = 2;
+  uint64 size = 3;
+}
+
+message FSReadResponse {
+  bytes raw_bytes = 1;
+}
+
+// Read File to Frame
+message FSReadFileToFrameRequest {
+  string path = 1;
+}
+
+message FSReadFileToFrameResponse {
+  uint64 bytes = 1;
+}
+
+// Write
+message FSWriteRequest {
+  uint64 fd = 1;
+  uint64 offset = 2;
+  bytes raw_bytes = 3;
+}
+
+message FSWriteResponse {
+  uint64 bytes = 1;
+}
+
+// Truncate
+message FSTruncRequest {
+  uint64 fd = 1;
+  uint64 bytes = 2;
+}
+
+// Read Directory
+message FSReadNextDirRequest {
+  uint64 fd = 1;
+  uint64 pos = 2;
+}
+
+message FSReadNextDirResponse {
+  string name = 1;
+  uint64 idx = 2;
+}
+
+
+// Terminal
+
+message TermAcquireLockRequest {
+  uint64 pid = 1;
+}
+
+message TermAcquireLockResponse {
+  int64 status = 1;
+}
+
+message TermReleaseLockRequest {
+  uint64 pid = 1;
+}
+
+message TermRegisterClientRequest {
+  uint64 pid = 1;
+  // optimisation to avoid two msgs (Register & Acquire) being needed
+  uint64 lock = 2;
+}
+
+message TermRegisterClientResponse {
+  int64 status = 1;
+}
+
+message TermWriteStringRequest {
+  uint64 pid = 1;
+  string str = 2;
+  bool try_write = 3;
+  uint64 len = 4;
+}
+
+message TermWriteStringResponse {
+  uint64 written = 1;
+}
+
+message TermReadStringRequest {
+  uint64 pid = 1;
+}
+
+message TermReadStringResponse {
+  string str = 1;
+}
+
+message TermWriteCharRequest {
+  uint64 pid = 1; 
+  uint64 chr = 2;
+  bool try_write = 3;
+}
+
+message TermWriteCharResponse {
+    int64 status = 1;
+}
+
+message TermReadCharRequest {
+  uint64 pid = 1;
+  bool block = 2;
+}
+
+message TermReadCharRespnose {
+  uint64 chr = 1;
+  int64 status = 2;
+}
+
+message TermDebugRequest {}
+
+message RpcRequestWrap {
+  oneof data {
+    InitSendNumberRequest init_send_number = 1;
+    InitSendStringRequest init_send_string = 4;
+    
+    InitSerialPutcharRequest init_serial_putchar = 6;
+    InitSerialPutStringRequest init_serial_put_string = 5;
+    
+    InitProcessSpawnRequest init_process_spawn = 2;
+    InitProcessGetNameRequest init_process_get_name = 8;
+    InitProcessGetAllPidsRequest init_process_get_all_pids = 38;
+    InitProcessInformDeathRequest init_process_inform_death = 40;
+    
+    MemGetRamCapRequest mem_get_ram_cap = 3;
+    
+    ServiceConnectRequest service_connect = 10;
+    ServiceBytesRequest service_bytes = 15;
+
+    RouteRequest route = 9;
+
+    // Services
+    TestIncrementRequest test_increment = 11;
+    TestCapIncrementRequest test_cap_increment = 12;
+
+    NsLookupRequest ns_lookup = 13;
+    NsRegisterRequest ns_register = 14;
+
+    TermAcquireLockRequest term_acquire_lock = 27;
+    TermReleaseLockRequest term_release_lock = 28;
+    TermRegisterClientRequest term_register_client = 29;
+    TermWriteStringRequest term_write = 30;
+    TermWriteCharRequest term_putc = 31;
+    TermReadStringRequest term_read_str = 32;
+    TermReadCharRequest term_getc = 33;
+    TermDebugRequest term_debug = 39;
+ 
+    NsEnumerateRequest ns_enumerate = 21;
+    NsDeregisterRequest ns_deregister = 22;
+
+    CreateUdpEndpointRequest create_udp_endpoint = 16;
+    CreateTcpConnectionRequest create_tcp_connection = 17;
+
+    ArpRequest arp_request = 18;
+
+    CreateTcpServerRequest create_tcp_server = 19;
+    ConnectTcpClientRequest connect_tcp_client = 20;
+
+    FSOpenRequest fs_open = 23;
+    FSCreateRequest fs_create = 24;
+    FSCloseRequest fs_close = 25;
+    FSReadRequest fs_read = 26;
+    FSWriteRequest fs_write = 34;
+    FSTruncRequest fs_trunc = 35;
+    FSReadNextDirRequest fs_readnextdir = 36;
+    FSDeleteRequest fs_delete = 37;
+    FSReadFileToFrameRequest fs_read_file_to_frame = 41;
+
+    // next id: 42
+  }
+}
+
+message RpcResponseWrap {
+  uint64 err = 1;
+
+  oneof data {
+    InitProcessSpawnResponse init_process_spawn = 2;
+    InitSerialGetcharResponse init_serial_getchar = 4;
+    
+    InitProcessGetNameResponse init_process_get_name = 5;
+    InitProcessGetAllPidsResponse init_process_get_all_pids = 6;
+    
+    MemGetRamCapResponse mem_get_ram_cap = 3;
+    
+    ServiceBytesResponse service_bytes = 11;
+
+    RouteResponse route = 7;
+
+    // Services
+    TestIncrementResponse test_increment = 8;
+    TestCapIncrementResponse test_cap_increment = 9;
+
+    NsLookupResponse ns_lookup = 10;
+
+    TermWriteStringResponse term_write = 16;
+    TermWriteCharResponse term_putc = 17;
+    TermReadStringResponse term_read_str = 18;
+    TermReadCharRespnose  term_getc = 19;
+    TermRegisterClientResponse term_register_client = 20;
+    TermAcquireLockResponse term_acquire_lock = 21;
+
+    NsEnumerateResponse ns_enumerate = 12;
+
+
+    FSOpenResponse fs_open = 13;
+    FSCreateResponse fs_create = 14;
+    FSReadResponse fs_read = 15;
+    FSWriteResponse fs_write = 22;
+    FSReadNextDirResponse fs_readnextdir = 23;
+    FSReadFileToFrameResponse fs_read_file_to_frame = 27;
+
+    ArpTableResponse arp_table_response = 28;
+
+    //next id 29
+
+  }
+
+}
+
+message RpcMessage {
+  RpcMethod method = 1;
+
+  oneof direction {
+    RpcRequestWrap request = 2;
+    RpcResponseWrap response = 3;
+  }
+}
